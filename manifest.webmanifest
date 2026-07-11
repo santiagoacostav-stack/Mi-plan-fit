@@ -1,0 +1,9 @@
+{
+  "name": "Mi Plan Fitness",
+  "short_name": "Mi Plan",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f5f1ea",
+  "theme_color": "#171717",
+  "icons": []
+}
