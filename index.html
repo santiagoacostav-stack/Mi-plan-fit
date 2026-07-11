@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#171717">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Mi Plan Fitness</title>
+<style>
+:root{--bg:#f5f1ea;--card:#fff;--ink:#171717;--muted:#747474;--line:#ded7cd;--accent:#a98d62;--ok:#2e7d5a}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink)}
+.wrap{max-width:760px;margin:auto;padding:16px 16px 100px}.hero{background:#171717;color:#fff;border-radius:24px;padding:24px}.hero h1{margin:0 0 6px}.hero p{margin:0;color:#ccc}
+.tabs{display:flex;gap:8px;overflow:auto;position:sticky;top:0;background:var(--bg);padding:12px 0;z-index:5}.tab{border:0;border-radius:999px;padding:11px 15px;font-weight:700;background:#e6dfd5;white-space:nowrap}.tab.active{background:#171717;color:#fff}
+.section{display:none}.section.active{display:block}.card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:18px;margin:12px 0}.card h2,.card h3{margin:0 0 12px}
+.item{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid #eee}.item:last-child{border-bottom:0}.item input{width:22px;height:22px;accent-color:var(--ok)}.done{opacity:.5;text-decoration:line-through}
+button.action{border:0;border-radius:14px;background:#171717;color:#fff;padding:13px 15px;font-weight:700}button.alt{background:#e6dfd5;color:#171717}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.water{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.stat{margin-top:14px;background:#292929;padding:12px;border-radius:14px}.bar{height:12px;background:#3b3b3b;border-radius:999px;overflow:hidden}.bar>div{height:100%;width:0;background:#d7c09a}
+input,textarea,select{width:100%;border:1px solid var(--line);border-radius:12px;padding:12px;font-size:16px;background:#fff}textarea{min-height:90px}
+.small{font-size:13px;color:var(--muted)}.editor-row{display:grid;grid-template-columns:1fr auto;gap:8px;margin:8px 0}
+footer{position:fixed;bottom:0;left:0;right:0;background:rgba(245,241,234,.95);backdrop-filter:blur(10px);padding:10px 16px calc(10px + env(safe-area-inset-bottom));border-top:1px solid var(--line)}
+footer button{width:100%;max-width:728px;display:block;margin:auto}
+@media(max-width:560px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="hero">
+<h1 id="appName">Mi Plan Fitness</h1>
+<p>Tu dieta, rutina, agua y lista del súper.</p>
+<div class="stat"><div class="bar"><div id="bar"></div></div><div style="margin-top:8px"><b id="pct">0%</b> completado · <span id="waterTxt">0 ml</span> de agua</div></div>
+</div>
+
+<div class="tabs">
+<button class="tab active" data-tab="hoy">Hoy</button>
+<button class="tab" data-tab="comidas">Comidas</button>
+<button class="tab" data-tab="suplementos">Suplementos</button>
+<button class="tab" data-tab="entreno">Entreno</button>
+<button class="tab" data-tab="calendario">Calendario</button>
+<button class="tab" data-tab="super">Súper</button>
+<button class="tab" data-tab="editar">Editar plan</button>
+</div>
+
+<section id="hoy" class="section active">
+<div class="card"><h2>Checklist diario</h2><div id="todayList"></div></div>
+<div class="card"><h3>Agua</h3><div class="water"><button class="action" onclick="water(250)">+250 ml</button><button class="action" onclick="water(500)">+500 ml</button><button class="action alt" onclick="water(-250)">−250 ml</button></div></div>
+</section>
+
+<section id="comidas" class="section"><div id="mealCards"></div></section>
+<section id="suplementos" class="section"><div id="suppCards"></div></section>
+<section id="entreno" class="section"><div class="card"><select id="daySel"></select></div><div id="workout"></div></section>
+<section id="calendario" class="section">
+<div class="card">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+    <button class="action alt" onclick="moveMonth(-1)">‹</button>
+    <h3 id="monthLabel" style="margin:0"></h3>
+    <button class="action alt" onclick="moveMonth(1)">›</button>
+  </div>
+  <div id="calendar" style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:12px"></div>
+</div>
+</section>
+<section id="super" class="section"><div id="shopCards"></div></section>
+
+<section id="editar" class="section">
+<div class="card">
+<h2>Editar plan</h2>
+<p class="small">Puedes cambiar cantidades, alimentos, ejercicios y compras. Los cambios se guardan en este dispositivo.</p>
+<label>Nombre del plan</label><input id="nameEdit">
+</div>
+<div class="card"><h3>Comidas</h3><div id="mealEditor"></div><button class="action alt" onclick="addMeal()">Agregar comida</button></div>
+<div class="card"><h3>Rutinas</h3><div id="workoutEditor"></div><button class="action alt" onclick="addWorkoutDay()">Agregar día</button></div>
+<div class="card"><h3>Lista del súper</h3><div id="shopEditor"></div><button class="action alt" onclick="addShopGroup()">Agregar grupo</button></div>
+<div class="card"><button class="action" style="width:100%" onclick="savePlan()">Guardar cambios</button></div>
+</section>
+</div>
+
+<footer><button class="action alt" onclick="finishDay()">Guardar avance del día</button></footer>
+
+<script src="plan.js"></script>
+<script>
+const defaultPlan = window.DEFAULT_PLAN;
+function get(k,f){try{let v=localStorage.getItem(k);return v===null?f:JSON.parse(v)}catch(e){return f}}
+function set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+let plan=get("fitnessPlan",defaultPlan);
+let state=get("fitnessState",{checks:{},water:0,date:new Date().toISOString().slice(0,10)});
+let history=get("fitnessHistory",{});
+let viewDate=new Date();
+
+function row(label,key){let c=!!state.checks[key];return `<label class="item ${c?'done':''}"><input type="checkbox" ${c?'checked':''} onchange="toggle('${key}',this.checked)"><span>${label}</span></label>`}
+function toggle(k,v){state.checks[k]=v;set("fitnessState",state);render()}
+function water(v){state.water=Math.max(0,state.water+v);set("fitnessState",state);renderStats()}
+function dailyKeys(){
+ let k=[];
+ plan.meals.forEach((m,i)=>k.push("todayMeal"+i));
+ (plan.supplements||[]).forEach((s,i)=>s.items.forEach((x,j)=>k.push("supp-"+i+"-"+j)));
+ k.push("todayWorkout","todayWater");
+ return k;
+}
+function currentPercent(){
+ const keys=dailyKeys(), done=keys.filter(k=>state.checks[k]).length;
+ return keys.length?Math.round(done/keys.length*100):0;
+}
+function renderStats(){
+ const p=currentPercent();
+ pct.textContent=p+"%";
+ bar.style.width=p+"%";
+ waterTxt.textContent=state.water+" ml";
+}
+function renderToday(){todayList.innerHTML=plan.meals.map((m,i)=>row(m.title,"todayMeal"+i)).join("")+row("Entrenamiento","todayWorkout")+row("Meta de agua","todayWater")}
+function renderMeals(){mealCards.innerHTML=plan.meals.map((m,i)=>`<div class="card"><h3>${m.title}</h3><div class="small">${m.subtitle||""}</div>${m.items.map((x,j)=>row(x,`meal-${i}-${j}`)).join("")}</div>`).join("")}
+function renderSupp(){suppCards.innerHTML=(plan.supplements||[]).map((s,i)=>`<div class="card"><h3>${s.title}</h3>${s.items.map((x,j)=>row(x,`supp-${i}-${j}`)).join("")}</div>`).join("")}
+function renderWorkout(){let d=daySel.value||Object.keys(plan.workouts)[0];workout.innerHTML=`<div class="card"><h3>${d||"Sin rutina"}</h3>${(plan.workouts[d]||[]).map((x,i)=>row(x,`wo-${d}-${i}`)).join("")}</div>`}
+function renderShop(){shopCards.innerHTML=Object.entries(plan.shopping).map(([g,a],gi)=>`<div class="card"><h3>${g}</h3>${a.map((x,i)=>row(x,`shop-${gi}-${i}`)).join("")}</div>`).join("")}
+function setupDay(){daySel.innerHTML=Object.keys(plan.workouts).map(x=>`<option>${x}</option>`).join("");daySel.onchange=renderWorkout}
+
+function editorItem(value, path, idx){return `<div class="editor-row"><input value="${value.replace(/"/g,'&quot;')}" data-path="${path}" data-idx="${idx}"><button class="action alt" onclick="removeEditorItem('${path}',${idx})">×</button></div>`}
+function renderEditor(){
+ nameEdit.value=plan.name;
+ mealEditor.innerHTML=plan.meals.map((m,mi)=>`<div class="card"><input value="${m.title}" data-meal-title="${mi}"><input style="margin-top:8px" value="${m.subtitle||""}" data-meal-sub="${mi}">${m.items.map((x,i)=>editorItem(x,`meal.${mi}`,i)).join("")}<button class="action alt" onclick="addMealItem(${mi})">Agregar alimento</button></div>`).join("");
+ workoutEditor.innerHTML=Object.entries(plan.workouts).map(([d,a],di)=>`<div class="card"><input value="${d}" data-workout-day="${di}">${a.map((x,i)=>editorItem(x,`workout.${di}`,i)).join("")}<button class="action alt" onclick="addWorkoutItem(${di})">Agregar ejercicio</button></div>`).join("");
+ shopEditor.innerHTML=Object.entries(plan.shopping).map(([g,a],gi)=>`<div class="card"><input value="${g}" data-shop-group="${gi}">${a.map((x,i)=>editorItem(x,`shop.${gi}`,i)).join("")}<button class="action alt" onclick="addShopItem(${gi})">Agregar producto</button></div>`).join("");
+}
+function syncEditor(){
+ plan.name=nameEdit.value||"Mi Plan Fitness";
+ document.querySelectorAll("[data-meal-title]").forEach(e=>plan.meals[+e.dataset.mealTitle].title=e.value);
+ document.querySelectorAll("[data-meal-sub]").forEach(e=>plan.meals[+e.dataset.mealSub].subtitle=e.value);
+ document.querySelectorAll("[data-workout-day]").forEach((e,i)=>{let old=Object.keys(plan.workouts)[i],vals=plan.workouts[old];if(e.value!==old){delete plan.workouts[old];plan.workouts[e.value]=vals}});
+ document.querySelectorAll("[data-shop-group]").forEach((e,i)=>{let old=Object.keys(plan.shopping)[i],vals=plan.shopping[old];if(e.value!==old){delete plan.shopping[old];plan.shopping[e.value]=vals}});
+ document.querySelectorAll("[data-path]").forEach(e=>{let [t,n]=e.dataset.path.split("."),i=+e.dataset.idx;if(t==="meal")plan.meals[+n].items[i]=e.value;if(t==="workout")plan.workouts[Object.keys(plan.workouts)[+n]][i]=e.value;if(t==="shop")plan.shopping[Object.keys(plan.shopping)[+n]][i]=e.value});
+}
+function addMeal(){syncEditor();plan.meals.push({title:"Nueva comida",subtitle:"",items:["Nuevo alimento"]});renderEditor()}
+function addMealItem(i){syncEditor();plan.meals[i].items.push("Nuevo alimento");renderEditor()}
+function addWorkoutDay(){syncEditor();plan.workouts["Nuevo día "+(Object.keys(plan.workouts).length+1)]=["Nuevo ejercicio"];renderEditor()}
+function addWorkoutItem(i){syncEditor();plan.workouts[Object.keys(plan.workouts)[i]].push("Nuevo ejercicio");renderEditor()}
+function addShopGroup(){syncEditor();plan.shopping["Nuevo grupo "+(Object.keys(plan.shopping).length+1)]=["Nuevo producto"];renderEditor()}
+function addShopItem(i){syncEditor();plan.shopping[Object.keys(plan.shopping)[i]].push("Nuevo producto");renderEditor()}
+function removeEditorItem(path,idx){syncEditor();let[t,n]=path.split(".");if(t==="meal")plan.meals[+n].items.splice(idx,1);if(t==="workout")plan.workouts[Object.keys(plan.workouts)[+n]].splice(idx,1);if(t==="shop")plan.shopping[Object.keys(plan.shopping)[+n]].splice(idx,1);renderEditor()}
+function savePlan(){syncEditor();set("fitnessPlan",plan);renderAll();alert("Plan actualizado")}
+function finishDay(){
+ const d=state.date||new Date().toISOString().slice(0,10);
+ history[d]={percent:currentPercent(),water:state.water};
+ set("fitnessHistory",history);
+ renderCalendar();
+ alert("Avance guardado: "+currentPercent()+"%");
+}
+function moveMonth(n){viewDate=new Date(viewDate.getFullYear(),viewDate.getMonth()+n,1);renderCalendar()}
+function renderCalendar(){
+ const y=viewDate.getFullYear(),m=viewDate.getMonth();
+ monthLabel.textContent=viewDate.toLocaleDateString("es-MX",{month:"long",year:"numeric"});
+ const labels=["L","M","M","J","V","S","D"];
+ let h=labels.map(x=>`<div class="small" style="text-align:center;font-weight:700">${x}</div>`).join("");
+ const first=new Date(y,m,1), start=(first.getDay()+6)%7, last=new Date(y,m+1,0).getDate();
+ for(let i=0;i<start;i++)h+="<div></div>";
+ for(let d=1;d<=last;d++){
+   const key=`${y}-${String(m+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+   const p=history[key]?.percent ?? (key===state.date?currentPercent():0);
+   h+=`<div style="background:#f2eee7;border-radius:12px;padding:7px;min-height:58px"><b>${d}</b><div class="small">${p}%</div><div style="height:5px;background:#ddd;border-radius:9px;margin-top:6px;overflow:hidden"><div style="height:100%;width:${p}%;background:#2e7d5a"></div></div></div>`;
+ }
+ calendar.innerHTML=h;
+}
+function renderAll(){appName.textContent=plan.name;renderToday();renderMeals();renderSupp();setupDay();renderWorkout();renderShop();renderEditor();renderCalendar();renderStats()}
+document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tab,.section").forEach(x=>x.classList.remove("active"));b.classList.add("active");document.getElementById(b.dataset.tab).classList.add("active")});
+renderAll();
+if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js");
+</script>
+</body>
+</html>
