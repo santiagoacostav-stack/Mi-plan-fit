@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111111">
+<link rel="manifest" href="manifest.webmanifest">
+<title>San</title>
+<style>
+:root{
+ --bg:#f3efe8;--card:#fffdf9;--ink:#111;--muted:#777168;--line:#ddd5ca;
+ --accent:#b99a6a;--accent2:#ded0bb;--ok:#2f7d5c;--danger:#a84d4d;
+}
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(180deg,#efe9df 0,#f7f4ef 240px);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:780px;margin:auto;padding:16px 16px 110px}
+.hero{background:radial-gradient(circle at top right,#3b342c 0,#171717 46%,#101010 100%);color:white;border-radius:28px;padding:24px;box-shadow:0 18px 45px rgba(0,0,0,.16)}
+.hero h1{font-size:34px;margin:0 0 6px}.hero p{margin:0;color:#d6d0c8}
+.hero-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:12px;margin-top:18px}
+.hero-box{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:14px}
+.hero-box b{font-size:22px;display:block}.hero-box span{font-size:12px;color:#d9d2c8}
+.tabs{display:flex;gap:8px;overflow:auto;position:sticky;top:0;padding:12px 0;background:rgba(243,239,232,.92);backdrop-filter:blur(12px);z-index:8}
+.tab{border:0;border-radius:999px;padding:11px 15px;font-weight:800;background:#e8e0d5;white-space:nowrap}
+.tab.active{background:#111;color:#fff}
+.section{display:none}.section.active{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:18px;margin:12px 0;box-shadow:0 8px 28px rgba(25,20,15,.05)}
+.card h2,.card h3{margin:0 0 10px}.small{font-size:13px;color:var(--muted);line-height:1.4}
+.progress{height:11px;border-radius:999px;background:#ded8cf;overflow:hidden}.progress>div{height:100%;background:linear-gradient(90deg,var(--accent),#d8bd91);transition:width .25s}
+.kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.kpi{background:#f1ece5;border-radius:16px;padding:14px}.kpi b{font-size:21px;display:block}.kpi span{font-size:12px;color:var(--muted)}
+.daily-row{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:13px 0;border-bottom:1px solid #eee7df}.daily-row:last-child{border-bottom:0}
+.daily-row input,.item input{width:23px;height:23px;accent-color:var(--ok)}.done{opacity:.55}.done .label,.item.done span{text-decoration:line-through}
+button{font:inherit}.action,.soft,.round{border:0;border-radius:14px;padding:12px 14px;font-weight:800}.action{background:#111;color:#fff}.soft{background:#e8e0d5;color:#111}.round{width:40px;height:40px;border-radius:999px;padding:0;background:#111;color:#fff}
+.water{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.item{display:flex;gap:10px;align-items:flex-start;padding:11px 0;border-bottom:1px solid #eee7df}.item:last-child{border-bottom:0}
+.exercise{padding:12px 0;border-bottom:1px solid #eee7df}.exercise:last-child{border-bottom:0}
+input[type=text],select{width:100%;border:1px solid var(--line);border-radius:13px;padding:12px;font-size:16px;background:white}
+.cal-head{display:flex;justify-content:space-between;align-items:center;gap:10px}.calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:12px}.dow{text-align:center;font-size:12px;font-weight:800;color:var(--muted)}
+.day{background:#f0ebe4;border-radius:13px;padding:7px;min-height:62px}.day.today{outline:2px solid #111}.day b{font-size:13px}.day .small{font-size:11px}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.52);z-index:30;padding:18px;align-items:flex-end}.modal.open{display:flex}
+.modal-card{background:var(--bg);width:100%;max-width:780px;max-height:90vh;overflow:auto;margin:auto;border-radius:26px 26px 16px 16px;padding:18px}
+.modal-head{display:flex;justify-content:space-between;align-items:center;gap:12px;position:sticky;top:-18px;background:var(--bg);padding:8px 0 14px;z-index:2}
+.quote{text-align:center;font-weight:800;font-size:17px;line-height:1.4}
+footer{position:fixed;left:0;right:0;bottom:0;background:rgba(243,239,232,.94);backdrop-filter:blur(12px);border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom))}
+footer button{display:block;width:100%;max-width:748px;margin:auto}
+@media(max-width:560px){.hero-grid{grid-template-columns:1fr}.kpi-grid{grid-template-columns:1fr 1fr 1fr}.daily-row{grid-template-columns:auto 1fr auto}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <h1>San</h1>
+    <p>Tu día, más claro.</p>
+    <div class="hero-grid">
+      <div class="hero-box">
+        <span>Avance de hoy</span>
+        <b id="heroPct">0%</b>
+        <div class="progress" style="margin-top:10px;background:#3a3733"><div id="heroBar"></div></div>
+      </div>
+      <div class="hero-box">
+        <span>Agua</span>
+        <b id="heroWater">0 ml</b>
+        <span>Meta diaria</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="dashboard">Inicio</button>
+    <button class="tab" data-tab="hoy">Hoy</button>
+    <button class="tab" data-tab="comidas">Comidas</button>
+    <button class="tab" data-tab="suplementos">Suplementos</button>
+    <button class="tab" data-tab="entreno">Entreno</button>
+    <button class="tab" data-tab="calendario">Calendario</button>
+    <button class="tab" data-tab="super">Súper</button>
+  </div>
+
+  <section id="dashboard" class="section active">
+    <div class="card">
+      <h2 id="greeting">Buenos días, San. 👋</h2>
+      <p class="small">Hoy tienes una nueva oportunidad para avanzar.</p>
+    </div>
+    <div class="card">
+      <h3>Progreso</h3>
+      <div class="kpi-grid">
+        <div class="kpi"><b id="todayPct">0%</b><span>Hoy</span></div>
+        <div class="kpi"><b id="weekPct">0%</b><span>Semana</span></div>
+        <div class="kpi"><b id="monthPct">0%</b><span>Mes</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Hoy toca</h3>
+      <div class="exercise"><b id="todayWorkout">—</b></div>
+    </div>
+    <div class="card">
+      <h3>Siguiente tarea</h3>
+      <div class="exercise"><b id="nextTask">—</b></div>
+      <button class="action" style="width:100%;margin-top:12px" onclick="goToToday()">Comenzar día</button>
+    </div>
+    <div class="card">
+      <h3>Racha</h3>
+      <div class="kpi-grid">
+        <div class="kpi"><b id="currentStreak">0</b><span>Días seguidos</span></div>
+        <div class="kpi"><b id="bestStreak">0</b><span>Mejor racha</span></div>
+        <div class="kpi"><b id="dashboardWater">0</b><span>ml de agua</span></div>
+      </div>
+    </div>
+    <div class="card"><p class="quote" id="quote"></p></div>
+  </section>
+
+  <section id="hoy" class="section">
+    <div class="card">
+      <h2>Checklist diario</h2>
+      <p class="small">Solo estas tareas principales cuentan para llegar al 100%.</p>
+      <div id="dailyList"></div>
+      <button class="soft" style="width:100%;margin-top:14px" onclick="goToDashboard()">Regresar al Dashboard</button>
+    </div>
+    <div class="card">
+      <h3>Agua</h3>
+      <div class="water">
+        <button class="action" onclick="addWater(250)">+250 ml</button>
+        <button class="action" onclick="addWater(500)">+500 ml</button>
+        <button class="soft" onclick="addWater(-250)">−250 ml</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="comidas" class="section"><div id="mealCards"></div></section>
+  <section id="suplementos" class="section"><div id="suppCards"></div></section>
+  <section id="entreno" class="section"><div id="trainingOverview"></div></section>
+  <section id="calendario" class="section">
+    <div class="card">
+      <div class="cal-head">
+        <button class="soft" onclick="moveMonth(-1)">‹</button>
+        <h3 id="monthLabel" style="margin:0"></h3>
+        <button class="soft" onclick="moveMonth(1)">›</button>
+      </div>
+      <div class="calendar" id="calendar"></div>
+    </div>
+  </section>
+  <section id="super" class="section"><div id="shopCards"></div></section>
+</div>
+
+<div class="modal" id="modal" onclick="backdropClose(event)">
+  <div class="modal-card">
+    <div class="modal-head">
+      <div><h2 id="modalTitle" style="margin:0"></h2><div id="modalSub" class="small"></div></div>
+      <button class="round" onclick="closeModal()">×</button>
+    </div>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<footer><button class="action" onclick="saveToday()">Guardar avance del día</button></footer>
+
+<script src="plan.js"></script>
+<script>
+const plan=window.DEFAULT_PLAN;
+function get(k,f){try{const v=localStorage.getItem(k);return v===null?f:JSON.parse(v)}catch(e){return f}}
+function set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+function dateKey(d=new Date()){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+let state=get("sanState",{date:dateKey(),daily:{},details:{},water:0,otherWorkout:""});
+let history=get("sanHistory",{});
+let viewDate=new Date();
+
+function strengthDays(){return Object.keys(plan.workouts).filter(k=>k!=="Hyrox")}
+function strengthIndex(){return get("sanStrengthIndex",0)}
+function setStrengthIndex(i){set("sanStrengthIndex",i)}
+function todayWorkoutName(){
+ const d=new Date().getDay();
+ if([2,4,6].includes(d)) return "Hyrox";
+ const days=strengthDays();
+ return days[strengthIndex()%days.length];
+}
+function ensureToday(){
+ const k=dateKey();
+ if(state.date!==k){
+   history[state.date]={percent:percent(),water:state.water};
+   set("sanHistory",history);
+   state={date:k,daily:{},details:{},water:0,otherWorkout:""};
+   set("sanState",state);
+ }
+}
+function dailyTasks(){
+ return [
+  {key:"supplements",label:"Suplementación",type:"supp"},
+  ...plan.meals.map((m,i)=>({key:"meal"+i,label:m.title,type:"meal",index:i})),
+  {key:"pre",label:"Pre entreno",type:"pre"},
+  {key:"workout",label:"Entrenamiento",type:"workout"},
+  {key:"post",label:"Post entreno",type:"post"},
+  {key:"water",label:"Meta de agua",type:"plain"}
+ ];
+}
+function percent(){const t=dailyTasks();return Math.round(t.filter(x=>state.daily[x.key]).length/t.length*100)}
+function toggleDaily(key,val,type,index){
+ state.daily[key]=val;
+ if(type==="meal")plan.meals[index].items.forEach((_,i)=>state.details[`meal-${index}-${i}`]=val);
+ if(type==="supp")plan.supplements.forEach((s,si)=>s.items.forEach((_,ii)=>state.details[`supp-${si}-${ii}`]=val));
+ if(type==="pre")plan.preWorkout.forEach((s,si)=>s.items.forEach((_,ii)=>state.details[`pre-${si}-${ii}`]=val));
+ if(type==="post")plan.postWorkout.forEach((_,i)=>state.details[`post-${i}`]=val);
+ set("sanState",state);renderAll();
+}
+function row(label,key,group,type,index){
+ const done=!!state.details[key];
+ return `<label class="item ${done?"done":""}"><input type="checkbox" ${done?"checked":""} onchange="toggleDetail('${key}',this.checked,'${group}','${type}',${index})"><span>${label}</span></label>`;
+}
+function toggleDetail(key,val,group,type,index){
+ state.details[key]=val;
+ if(type==="meal")state.daily[group]=plan.meals[index].items.every((_,i)=>state.details[`meal-${index}-${i}`]);
+ if(type==="supp"){
+  const ks=[];plan.supplements.forEach((s,si)=>s.items.forEach((_,ii)=>ks.push(`supp-${si}-${ii}`)));
+  state.daily.supplements=ks.every(k=>state.details[k]);
+ }
+ if(type==="pre"){
+  const ks=[];plan.preWorkout.forEach((s,si)=>s.items.forEach((_,ii)=>ks.push(`pre-${si}-${ii}`)));
+  state.daily.pre=ks.every(k=>state.details[k]);
+ }
+ if(type==="post")state.daily.post=plan.postWorkout.every((_,i)=>state.details[`post-${i}`]);
+ set("sanState",state);renderAll();
+ if(type==="meal")openMeal(index);
+ if(type==="supp")openSupp();
+ if(type==="pre")openPre();
+ if(type==="post")openPost();
+}
+function renderDaily(){
+ dailyList.innerHTML=dailyTasks().map(t=>{
+  let action="";
+  if(t.type==="meal")action=`<button class="soft" onclick="openMeal(${t.index})">Ver</button>`;
+  if(t.type==="supp")action=`<button class="soft" onclick="openSupp()">Ver</button>`;
+  if(t.type==="pre")action=`<button class="soft" onclick="openPre()">Ver</button>`;
+  if(t.type==="workout")action=`<button class="soft" onclick="openWorkout()">Ver</button>`;
+  if(t.type==="post")action=`<button class="soft" onclick="openPost()">Ver</button>`;
+  return `<div class="daily-row ${state.daily[t.key]?"done":""}">
+   <input type="checkbox" ${state.daily[t.key]?"checked":""} onchange="toggleDaily('${t.key}',this.checked,'${t.type}',${t.index??0})">
+   <div class="label"><b>${t.label}</b>${action?'<div class="small">Toca “Ver” para consultar el detalle</div>':''}</div>${action}
+  </div>`;
+ }).join("");
+}
+function openMeal(i){
+ const m=plan.meals[i];modalTitle.textContent=m.title;modalSub.textContent=m.subtitle;
+ modalBody.innerHTML=m.items.map((x,j)=>row(x,`meal-${i}-${j}`,`meal${i}`,"meal",i)).join("");
+ modal.classList.add("open");
+}
+function openSupp(){
+ modalTitle.textContent="Suplementación";modalSub.textContent="Checklist completo por horario";
+ modalBody.innerHTML=plan.supplements.map((s,si)=>`<div class="card"><h3>${s.title}</h3>${s.items.map((x,ii)=>row(x,`supp-${si}-${ii}`,"supplements","supp",0)).join("")}</div>`).join("");
+ modal.classList.add("open");
+}
+function openPre(){
+ modalTitle.textContent="Pre entreno";modalSub.textContent="Preparación antes del entrenamiento";
+ modalBody.innerHTML=plan.preWorkout.map((s,si)=>`<div class="card"><h3>${s.title}</h3>${s.items.map((x,ii)=>row(x,`pre-${si}-${ii}`,"pre","pre",0)).join("")}</div>`).join("");
+ modal.classList.add("open");
+}
+function openPost(){
+ modalTitle.textContent="Post entreno";modalSub.textContent="Recuperación inmediata";
+ modalBody.innerHTML=`<div class="card">${plan.postWorkout.map((x,i)=>row(x,`post-${i}`,"post","post",0)).join("")}</div>`;
+ modal.classList.add("open");
+}
+function openWorkout(){
+ const current=todayWorkoutName();
+ modalTitle.textContent="Entrenamiento";modalSub.textContent=current==="Hyrox"?"Martes, jueves y sábado":"Secuencia de fuerza";
+ modalBody.innerHTML=`
+ <div class="card"><h3>Durante entrenamiento</h3>${plan.duringWorkout.map(x=>`<div class="exercise">${x}</div>`).join("")}</div>
+ <div class="card"><h3>Otro entrenamiento realizado</h3><p class="small">Cuenta para el día, pero no avanza la secuencia de fuerza.</p><input id="otherWorkoutInput" type="text" placeholder="Ej. carrera, box, fútbol..." value="${state.otherWorkout||""}"><button class="soft" style="width:100%;margin-top:12px" onclick="saveOtherWorkout()">Guardar otro entrenamiento</button></div>
+ <div class="card"><h3>${current}</h3>${plan.workouts[current].map(x=>`<div class="exercise">${x}</div>`).join("")}</div>
+ <button class="action" style="width:100%" onclick="completeProgrammedWorkout()">Completar entrenamiento programado</button>`;
+ modal.classList.add("open");
+}
+function saveOtherWorkout(){
+ state.otherWorkout=document.getElementById("otherWorkoutInput").value||"Otro entrenamiento";
+ state.daily.workout=true;set("sanState",state);closeModal();renderAll();alert("Entrenamiento alternativo guardado.");
+}
+function completeProgrammedWorkout(){
+ const current=todayWorkoutName();
+ if(current!=="Hyrox")setStrengthIndex((strengthIndex()+1)%strengthDays().length);
+ state.daily.workout=true;set("sanState",state);closeModal();renderAll();
+ alert(current==="Hyrox"?"Hyrox completado":"Sesión completada. Se desbloqueó la siguiente.");
+}
+function closeModal(){modal.classList.remove("open")}
+function backdropClose(e){if(e.target===modal)closeModal()}
+function addWater(v){state.water=Math.max(0,state.water+v);if(state.water>=plan.waterGoal)state.daily.water=true;set("sanState",state);renderAll()}
+function renderMeals(){mealCards.innerHTML=plan.meals.map((m,i)=>`<div class="card"><h3>${m.title}</h3><div class="small">${m.subtitle}</div><button class="action" style="margin-top:12px" onclick="openMeal(${i})">Abrir checklist</button></div>`).join("")}
+function renderSupp(){suppCards.innerHTML=`<div class="card"><h2>Suplementación</h2><p class="small">Pre y post entreno están separados para que el flujo diario sea más claro.</p><button class="action" onclick="openSupp()">Abrir checklist</button></div>`+plan.supplements.map(s=>`<div class="card"><h3>${s.title}</h3>${s.items.map(x=>`<div class="exercise">${x}</div>`).join("")}</div>`).join("")}
+function renderTraining(){
+ const current=todayWorkoutName();
+ trainingOverview.innerHTML=`<div class="card"><h2>Entrenamiento de hoy</h2><div class="exercise"><b>${current}</b></div><button class="action" onclick="openWorkout()">Abrir entrenamiento</button></div>
+ <div class="card"><h3>Siguiente sesión de fuerza</h3><div class="exercise">${current==="Hyrox"?strengthDays()[strengthIndex()%strengthDays().length]:strengthDays()[(strengthIndex()+1)%strengthDays().length]}</div><p class="small">Hyrox no altera la secuencia de fuerza.</p></div>`;
+}
+function renderShop(){shopCards.innerHTML=Object.entries(plan.shopping).map(([g,a],gi)=>`<div class="card"><h3>${g}</h3>${a.map((x,i)=>row(x,`shop-${gi}-${i}`,"","shop",0)).join("")}</div>`).join("")}
+function saveToday(){history[state.date]={percent:percent(),water:state.water};set("sanHistory",history);renderAll();alert("Avance guardado: "+percent()+"%")}
+function moveMonth(n){viewDate=new Date(viewDate.getFullYear(),viewDate.getMonth()+n,1);renderCalendar()}
+function renderCalendar(){
+ const y=viewDate.getFullYear(),m=viewDate.getMonth();
+ monthLabel.textContent=viewDate.toLocaleDateString("es-MX",{month:"long",year:"numeric"});
+ let h=["L","M","M","J","V","S","D"].map(x=>`<div class="dow">${x}</div>`).join("");
+ const start=(new Date(y,m,1).getDay()+6)%7,last=new Date(y,m+1,0).getDate();
+ for(let i=0;i<start;i++)h+="<div></div>";
+ for(let d=1;d<=last;d++){
+  const k=`${y}-${String(m+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+  const p=history[k]?.percent??(k===state.date?percent():0);
+  h+=`<div class="day ${k===dateKey()?"today":""}"><b>${d}</b><div class="small">${p}%</div><div class="progress" style="margin-top:7px;height:5px"><div style="width:${p}%"></div></div></div>`;
+ }
+ calendar.innerHTML=h;
+}
+function weekAverage(){
+ const now=new Date(),offset=(now.getDay()+6)%7,monday=new Date(now);monday.setDate(now.getDate()-offset);
+ let vals=[];for(let i=0;i<7;i++){const d=new Date(monday);d.setDate(monday.getDate()+i);const k=dateKey(d);if(k===state.date)vals.push(percent());else if(history[k])vals.push(history[k].percent)}
+ return vals.length?Math.round(vals.reduce((a,b)=>a+b,0)/vals.length):0;
+}
+function monthAverage(){
+ const now=new Date();let vals=[];for(let d=1;d<=now.getDate();d++){const k=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;if(k===state.date)vals.push(percent());else if(history[k])vals.push(history[k].percent)}
+ return vals.length?Math.round(vals.reduce((a,b)=>a+b,0)/vals.length):0;
+}
+function streak(){
+ const all={...history,[state.date]:{percent:percent()}},keys=Object.keys(all).sort();let run=0,best=0;
+ for(const k of keys){if((all[k].percent||0)>=80){run++;best=Math.max(best,run)}else run=0}
+ let current=0,d=new Date();while((all[dateKey(d)]?.percent||0)>=80){current++;d.setDate(d.getDate()-1)}
+ return {current,best};
+}
+function nextTask(){const t=dailyTasks().find(x=>!state.daily[x.key]);return t?t.label:"Día completo"}
+function greetingText(){const h=new Date().getHours();return h<12?"Buenos días, San. 👋":h<19?"Buenas tardes, San. 👋":"Buenas noches, San. 👋"}
+function quote(){const q=["La constancia vence a la motivación.","No tienes que hacerlo perfecto, solo hacerlo.","El San de mañana depende del de hoy.","Un día bien hecho cambia una semana.","La disciplina se construye una decisión a la vez.","Cumplir contigo también es progreso."];return q[Math.floor(Date.now()/86400000)%q.length]}
+function renderDashboard(){
+ const p=percent(),w=weekAverage(),m=monthAverage(),s=streak();
+ greeting.textContent=greetingText();todayPct.textContent=p+"%";weekPct.textContent=w+"%";monthPct.textContent=m+"%";
+ todayWorkout.textContent=todayWorkoutName();nextTask.textContent=nextTask();currentStreak.textContent=s.current;bestStreak.textContent=s.best;dashboardWater.textContent=state.water;quote.textContent=quote();
+}
+function renderHero(){const p=percent();heroPct.textContent=p+"%";heroBar.style.width=p+"%";heroWater.textContent=state.water+" ml"}
+function goToToday(){document.querySelectorAll(".tab,.section").forEach(x=>x.classList.remove("active"));document.querySelector('[data-tab="hoy"]').classList.add("active");hoy.classList.add("active")}
+function goToDashboard(){document.querySelectorAll(".tab,.section").forEach(x=>x.classList.remove("active"));document.querySelector('[data-tab="dashboard"]').classList.add("active");dashboard.classList.add("active");window.scrollTo({top:0,behavior:"smooth"})}
+function renderAll(){ensureToday();renderHero();renderDashboard();renderDaily();renderMeals();renderSupp();renderTraining();renderShop();renderCalendar()}
+document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tab,.section").forEach(x=>x.classList.remove("active"));b.classList.add("active");document.getElementById(b.dataset.tab).classList.add("active")})
+renderAll();
+if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js");
+</script>
+</body>
+</html>
